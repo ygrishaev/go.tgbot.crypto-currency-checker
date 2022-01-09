@@ -22,4 +22,8 @@ type CryptoCurrencies struct {
 const (
 	CryptoCurrencyBitcoin  string = "Bitcoin"
 	CryptoCurrencyEthereum string = "Ethereum"
+	CryptoCurrencyTether   string = "Tether"
+	CryptoCurrencySolana   string = "Solana"
+	CryptoCurrencyCardano  string = "Cardano"
+	CryptoCurrencyDogecoin string = "Dogecoin"
 )

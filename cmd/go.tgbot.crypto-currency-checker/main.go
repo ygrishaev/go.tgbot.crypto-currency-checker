@@ -83,20 +83,32 @@ func main() {
 
 		// Extract the command from the Message.
 		switch update.Message.Command() {
+		case "Random":
+			msg.Text = renderText(curr.Data[rand.Intn(len(curr.Data))])
 		case entities.CryptoCurrencyBitcoin:
-			price, _ := strconv.ParseFloat(curr.Data[0].PriceUsd, 64)
-			msg.Text = fmt.Sprintf("Цена 1 BTC: %.4f usd 💰", price)
-			msg.Text = fmt.Sprintf(msg.Text+"\n\nВремя обновления курса: %s", updatedAt.Format("2006-01-02 15:04:05"))
+			msg.Text = renderText(curr.Data[0])
 		case entities.CryptoCurrencyEthereum:
-			price, _ := strconv.ParseFloat(curr.Data[1].PriceUsd, 64)
-			msg.Text = fmt.Sprintf("Цена 1 ETH: %.4f usd 💰", price)
-			msg.Text = fmt.Sprintf(msg.Text+"\n\nВремя обновления курса: %s", updatedAt.Format("2006-01-02 15:04:05"))
+			msg.Text = renderText(curr.Data[1])
+		case entities.CryptoCurrencyTether:
+			msg.Text = renderText(curr.Data[2])
+		case entities.CryptoCurrencySolana:
+			msg.Text = renderText(curr.Data[4])
+		case entities.CryptoCurrencyCardano:
+			msg.Text = renderText(curr.Data[6])
+		case entities.CryptoCurrencyDogecoin:
+			msg.Text = renderText(curr.Data[11])
 		default:
 			msg.Text = fmt.Sprintf(
-				"Введите /%s или /%s, чтобы узнать текущую цену на криптовалюту",
+				"Список комманд, чтобы узнать текущую цену на криптовалюту:\n\n/%s\n/%s\n/%s\n/%s\n/%s\n/%s\n\n",
 				entities.CryptoCurrencyBitcoin,
 				entities.CryptoCurrencyEthereum,
+				entities.CryptoCurrencyTether,
+				entities.CryptoCurrencySolana,
+				entities.CryptoCurrencyCardano,
+				entities.CryptoCurrencyDogecoin,
 			)
+
+			msg.Text = msg.Text + fmt.Sprintf("Либо получите случайную монету через команду /Random")
 		}
 
 		if _, err := bot.Send(msg); err != nil {
@@ -104,4 +116,27 @@ func main() {
 		}
 	}
 
+}
+
+func renderText(curr *entities.CryptoCurrency) string {
+	var result string
+	price, _ := strconv.ParseFloat(curr.PriceUsd, 64)
+	changePercent, _ := strconv.ParseFloat(curr.ChangePercent24Hr, 64)
+
+	result = fmt.Sprintf("Цена %s по отношению к доллару США\n\n", curr.Name)
+	result = result + fmt.Sprintf("1 %s = %.4f USD 💰\n", curr.Symbol, price)
+
+	if changePercent >= 0 {
+		result = result + "(+"
+	} else {
+		result = result + "("
+	}
+	result = result + fmt.Sprintf("%.2f%%󠀥 за 24 часа)\n\n", changePercent)
+	result = result + fmt.Sprintf("Время обновления курса: %v\n\n", updatedAt.Format("2006-01-02 15:04"))
+
+	if curr.Explorer != "" {
+		result = result + fmt.Sprintf("Информация о монете: %s", curr.Explorer)
+	}
+
+	return result
 }
