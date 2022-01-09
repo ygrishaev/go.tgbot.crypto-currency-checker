@@ -16,6 +16,7 @@ import (
 )
 
 var curr entities.CryptoCurrencies
+var updatedAt time.Time = time.Now()
 
 func main() {
 	// Делает рандом более рандомным
@@ -35,21 +36,23 @@ func main() {
 	logger.Info("Application start")
 
 	logger.Info("Отправка первичного запроса на получение курса криптовалют")
-	BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+	BufferCurr, BufferTime, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
 	if err != nil {
 		logger.Info("Ошибка запроса к API через Goroutine")
 	} else {
 		curr = BufferCurr
+		updatedAt = BufferTime
 	}
 
 	go func() {
 		for range time.Tick(time.Minute) {
 			logger.Info("Отправка вторичного запроса на получение курса криптовалют")
-			BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+			BufferCurr, BufferTime, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
 			if err != nil {
 				logger.Info("Ошибка запроса к API через Goroutine")
 			} else {
 				curr = BufferCurr
+				updatedAt = BufferTime
 			}
 		}
 	}()
@@ -83,9 +86,11 @@ func main() {
 		case entities.CryptoCurrencyBitcoin:
 			price, _ := strconv.ParseFloat(curr.Data[0].PriceUsd, 64)
 			msg.Text = fmt.Sprintf("Цена 1 BTC: %.4f usd 💰", price)
+			msg.Text = fmt.Sprintf(msg.Text+"\n\nВремя обновления курса: %s", updatedAt.Format("2006-01-02 15:04:05"))
 		case entities.CryptoCurrencyEthereum:
 			price, _ := strconv.ParseFloat(curr.Data[1].PriceUsd, 64)
 			msg.Text = fmt.Sprintf("Цена 1 ETH: %.4f usd 💰", price)
+			msg.Text = fmt.Sprintf(msg.Text+"\n\nВремя обновления курса: %s", updatedAt.Format("2006-01-02 15:04:05"))
 		default:
 			msg.Text = fmt.Sprintf(
 				"Введите /%s или /%s, чтобы узнать текущую цену на криптовалюту",

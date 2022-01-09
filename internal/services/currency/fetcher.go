@@ -6,9 +6,10 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"time"
 )
 
-func GetCryptoCurrencyFromRemoteAPI(ApiUrl string, logger *zap.Logger) (entities.CryptoCurrencies, error) {
+func GetCryptoCurrencyFromRemoteAPI(ApiUrl string, logger *zap.Logger) (entities.CryptoCurrencies, time.Time, error) {
 	resp, err := http.Get(ApiUrl)
 	if err != nil {
 		logger.Info("Не удалось сделать http запрос")
@@ -28,5 +29,7 @@ func GetCryptoCurrencyFromRemoteAPI(ApiUrl string, logger *zap.Logger) (entities
 		logger.Info("Не удалось распарсить курс валют")
 	}
 
-	return curr, err
+	time := time.Now()
+
+	return curr, time, err
 }
