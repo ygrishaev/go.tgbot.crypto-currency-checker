@@ -31,3 +31,6 @@ lint:
 
 run:
 	CONFIG_PATH=configs/config.yaml go run cmd/go.tgbot.crypto-currency-checker/main.go
+
+run-binary:
+	CONFIG_PATH=configs/config.yaml ./bin/go.tgbot.crypto-currency-checker
