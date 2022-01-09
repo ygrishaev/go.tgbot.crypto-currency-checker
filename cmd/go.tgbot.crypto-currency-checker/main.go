@@ -7,6 +7,7 @@ import (
 	"go.tgbot.crypto-currency-checker/internal/services/currency"
 	"log"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -14,11 +15,18 @@ import (
 	"go.uber.org/zap"
 )
 
+var curr entities.CryptoCurrencies
+
 func main() {
 	// Делает рандом более рандомным
 	rand.Seed(time.Now().UnixNano())
 
-	appConfig, err := config.New("configs/config.yaml")
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Fatal("CONFIG_PATH is a required variable")
+	}
+
+	appConfig, err := config.New(configPath)
 	if err != nil {
 		log.Fatalf("failed to read app config: %v", err)
 	}
@@ -26,7 +34,25 @@ func main() {
 	logger, _ := zap.NewProduction()
 	logger.Info("Application start")
 
-	curr := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+	logger.Info("Отправка первичного запроса на получение курса криптовалют")
+	BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+	if err != nil {
+		logger.Info("Ошибка запроса к API через Goroutine")
+	} else {
+		curr = BufferCurr
+	}
+
+	go func() {
+		for range time.Tick(time.Minute) {
+			logger.Info("Отправка вторичного запроса на получение курса криптовалют")
+			BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+			if err != nil {
+				logger.Info("Ошибка запроса к API через Goroutine")
+			} else {
+				curr = BufferCurr
+			}
+		}
+	}()
 
 	bot, err := tgbotapi.NewBotAPI(appConfig.TelegramAPIToken)
 	if err != nil {
@@ -41,10 +67,12 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
-		if update.Message == nil { // ignore any non-Message updates
+
+		if update.Message == nil {
 			continue
 		}
-		if !update.Message.IsCommand() { // ignore any non-command Messages
+
+		if !update.Message.IsCommand() {
 			continue
 		}
 
@@ -59,9 +87,11 @@ func main() {
 			price, _ := strconv.ParseFloat(curr.Data[1].PriceUsd, 64)
 			msg.Text = fmt.Sprintf("Цена 1 ETH: %.4f usd 💰", price)
 		default:
-			msg.Text = "Введи /" +
-				entities.CryptoCurrencyBitcoin + " или /" +
-				entities.CryptoCurrencyEthereum + ", чтобы узнать текущую цена на криптовалюту"
+			msg.Text = fmt.Sprintf(
+				"Введите /%s или /%s, чтобы узнать текущую цену на криптовалюту",
+				entities.CryptoCurrencyBitcoin,
+				entities.CryptoCurrencyEthereum,
+			)
 		}
 
 		if _, err := bot.Send(msg); err != nil {
