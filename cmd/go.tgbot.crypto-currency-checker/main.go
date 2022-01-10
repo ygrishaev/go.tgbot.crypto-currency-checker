@@ -18,14 +18,18 @@ var curr entities.CryptoCurrencies
 var updatedAt time.Time = time.Now()
 
 func main() {
+
 	// Делает рандом более рандомным
 	rand.Seed(time.Now().UnixNano())
 
+	// Прописываем при запуске как CONFIG_PATH=configs/config.yaml
+	// Либо настраиваем в IDE переменную окружения
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is a required variable")
 	}
 
+	// appConfig - структура со всеми конфигами приложения
 	appConfig, err := config.New(configPath)
 	if err != nil {
 		log.Fatalf("failed to read app config: %v", err)
