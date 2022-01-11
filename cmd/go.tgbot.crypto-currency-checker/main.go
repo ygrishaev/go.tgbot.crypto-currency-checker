@@ -38,21 +38,17 @@ func main() {
 	logger.Info("Application start")
 
 	logger.Info("Отправка первичного запроса на получение курса криптовалют")
-	BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+	curr, err = currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
 	if err != nil {
 		logger.Info("Ошибка запроса к API через Goroutine")
-	} else {
-		curr = BufferCurr
 	}
 
 	go func() {
 		for range time.Tick(time.Minute) {
 			logger.Info("Отправка вторичного запроса на получение курса криптовалют")
-			BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+			curr, err = currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
 			if err != nil {
 				logger.Info("Ошибка запроса к API через Goroutine")
-			} else {
-				curr = BufferCurr
 			}
 		}
 	}()
