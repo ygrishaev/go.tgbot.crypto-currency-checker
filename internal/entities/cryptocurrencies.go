@@ -1,5 +1,7 @@
 package entities
 
+import "time"
+
 type CryptoCurrency struct {
 	ID                string `json:"id"`
 	Rank              string `json:"rank"`
@@ -16,7 +18,8 @@ type CryptoCurrency struct {
 }
 
 type CryptoCurrencies struct {
-	Data []*CryptoCurrency `json:"data"`
+	Data       []*CryptoCurrency `json:"data"`
+	LastUpdate time.Time
 }
 
 const (

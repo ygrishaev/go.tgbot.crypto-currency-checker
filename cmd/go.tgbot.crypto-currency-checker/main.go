@@ -15,7 +15,6 @@ import (
 )
 
 var curr entities.CryptoCurrencies
-var updatedAt time.Time = time.Now()
 
 func main() {
 
@@ -39,23 +38,21 @@ func main() {
 	logger.Info("Application start")
 
 	logger.Info("Отправка первичного запроса на получение курса криптовалют")
-	BufferCurr, BufferTime, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+	BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
 	if err != nil {
 		logger.Info("Ошибка запроса к API через Goroutine")
 	} else {
 		curr = BufferCurr
-		updatedAt = BufferTime
 	}
 
 	go func() {
 		for range time.Tick(time.Minute) {
 			logger.Info("Отправка вторичного запроса на получение курса криптовалют")
-			BufferCurr, BufferTime, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+			BufferCurr, err := currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
 			if err != nil {
 				logger.Info("Ошибка запроса к API через Goroutine")
 			} else {
 				curr = BufferCurr
-				updatedAt = BufferTime
 			}
 		}
 	}()
@@ -87,19 +84,19 @@ func main() {
 		// Extract the command from the Message.
 		switch update.Message.Command() {
 		case "Random":
-			msg.Text = response.Render(curr.Data[rand.Intn(len(curr.Data))], updatedAt)
+			msg.Text = response.Render(curr.Data[rand.Intn(len(curr.Data))], curr.LastUpdate)
 		case entities.CryptoCurrencyBitcoin:
-			msg.Text = response.Render(curr.Data[0], updatedAt)
+			msg.Text = response.Render(curr.Data[0], curr.LastUpdate)
 		case entities.CryptoCurrencyEthereum:
-			msg.Text = response.Render(curr.Data[1], updatedAt)
+			msg.Text = response.Render(curr.Data[1], curr.LastUpdate)
 		case entities.CryptoCurrencyTether:
-			msg.Text = response.Render(curr.Data[2], updatedAt)
+			msg.Text = response.Render(curr.Data[2], curr.LastUpdate)
 		case entities.CryptoCurrencySolana:
-			msg.Text = response.Render(curr.Data[4], updatedAt)
+			msg.Text = response.Render(curr.Data[4], curr.LastUpdate)
 		case entities.CryptoCurrencyCardano:
-			msg.Text = response.Render(curr.Data[6], updatedAt)
+			msg.Text = response.Render(curr.Data[6], curr.LastUpdate)
 		case entities.CryptoCurrencyDogecoin:
-			msg.Text = response.Render(curr.Data[11], updatedAt)
+			msg.Text = response.Render(curr.Data[11], curr.LastUpdate)
 		default:
 			msg.Text = response.StartMessage()
 		}

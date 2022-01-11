@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Render(curr *entities.CryptoCurrency, time time.Time) string {
+func Render(curr *entities.CryptoCurrency, lastUpdate time.Time) string {
 	var result string
 	price, _ := strconv.ParseFloat(curr.PriceUsd, 64)
 	changePercent, _ := strconv.ParseFloat(curr.ChangePercent24Hr, 64)
@@ -21,7 +21,7 @@ func Render(curr *entities.CryptoCurrency, time time.Time) string {
 		result = result + "("
 	}
 	result = result + fmt.Sprintf("%.2f%%󠀥 за 24 часа)\n\n", changePercent)
-	result = result + fmt.Sprintf("Время обновления курса: %v\n\n", time.Format("2006-01-02 15:04"))
+	result = result + fmt.Sprintf("Время обновления курса: %v\n\n", lastUpdate.Format("2006-01-02 15:04"))
 
 	if curr.Explorer != "" {
 		result = result + fmt.Sprintf("Информация о монете: %s", curr.Explorer)

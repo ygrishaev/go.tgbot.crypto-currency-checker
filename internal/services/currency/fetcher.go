@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func GetCryptoCurrencyFromRemoteAPI(ApiUrl string, logger *zap.Logger) (entities.CryptoCurrencies, time.Time, error) {
+func GetCryptoCurrencyFromRemoteAPI(ApiUrl string, logger *zap.Logger) (entities.CryptoCurrencies, error) {
 	resp, err := http.Get(ApiUrl)
 	if err != nil {
 		logger.Info("Не удалось сделать http запрос")
@@ -29,7 +29,7 @@ func GetCryptoCurrencyFromRemoteAPI(ApiUrl string, logger *zap.Logger) (entities
 		logger.Info("Не удалось распарсить курс валют")
 	}
 
-	time := time.Now()
+	curr.LastUpdate = time.Now()
 
-	return curr, time, err
+	return curr, err
 }
