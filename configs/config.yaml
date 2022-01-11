@@ -1,3 +1,3 @@
-telegram_bot_name:
-telegram_api_token:
-coincap_api_url:
+telegram_bot_name: CryptoCurrencyCheckerBot
+telegram_api_token: ***
+coincap_api_url: https://api.coincap.io/v2/assets
