@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-co-op/gocron"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.uber.org/zap"
 )
@@ -37,21 +38,15 @@ func main() {
 	logger, _ := zap.NewProduction()
 	logger.Info("Application start")
 
-	logger.Info("Отправка первичного запроса на получение курса криптовалют")
-	curr, err = currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
-	if err != nil {
-		logger.Info("Ошибка запроса к API через Goroutine")
-	}
-
-	go func() {
-		for range time.Tick(time.Minute) {
-			logger.Info("Отправка вторичного запроса на получение курса криптовалют")
-			curr, err = currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
-			if err != nil {
-				logger.Info("Ошибка запроса к API через Goroutine")
-			}
+	s := gocron.NewScheduler(time.UTC)
+	s.Every(30).Seconds().Do(func() {
+		logger.Info("Отправка запроса на получение курса криптовалют")
+		curr, err = currency.GetCryptoCurrencyFromRemoteAPI(appConfig.CoincapApiUrl, logger)
+		if err != nil {
+			logger.Info("Ошибка запроса к API через Gocron")
 		}
-	}()
+	})
+	s.StartAsync()
 
 	bot, err := tgbotapi.NewBotAPI(appConfig.TelegramAPIToken)
 	if err != nil {
